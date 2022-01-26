@@ -1,23 +1,36 @@
 ﻿using BepInEx;
-using BepInEx.Configuration;
-using System.Collections.Generic;
 using BepInEx.Logging;
+using BepInEx.Configuration;
 using HarmonyLib;
 using System;
+using System.IO;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
+using System.Net;
+using System.Linq;
+using System.Text;
 using System.Collections;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEditor;
-using static UnityEngine.GUILayout;
+using UnityEngine.Networking;
+using System.Security;
+using System.Security.Permissions;
+
+[module: UnverifiableCode]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
+
 
 
 namespace DSPAutoSorter
 {
     [BepInPlugin("Appun.DSP.plugin.AutoSorter", "DSPAutoSorter", "1.2.5")]
-
+    [HarmonyPatch]
     public class DSPAutoSorter : BaseUnityPlugin
     {
         static public DSPAutoSorter self;
@@ -60,43 +73,96 @@ namespace DSPAutoSorter
             //         //LogManager.Logger.LogInfo("-------------------------------------squareIconSprite name : " + squareIconSprite.name);
             //     }
             // }
-            settingIconSprite = Resources.Load<Sprite>("ui/textures/sprites/icons/settings-icon");
-            if (settingIconSprite == null )
-            {
-                LogManager.Logger.LogInfo("-------------------------------------settingIconSprite is null");
+            //settingIconSprite = Resources.Load<Sprite>("ui/textures/sprites/icons/settings-icon");
+            //if (settingIconSprite == null )
+            //{
+            //    LogManager.Logger.LogInfo("-------------------------------------settingIconSprite is null");
 
-            }
+            //}
 
-            squareIconSprite = Resources.Load<Sprite>("ui/textures/sprites/icons/solid-bg");
-            if (squareIconSprite == null)
-            {
-                LogManager.Logger.LogInfo("-------------------------------------squareIconSprite is null");
+            //squareIconSprite = Resources.Load<Sprite>("ui/textures/sprites/icons/solid-bg");
+            //if (squareIconSprite == null)
+            //{
+            //    LogManager.Logger.LogInfo("-------------------------------------squareIconSprite is null");
 
-            }
+            //}
 
         }
 
 
 
+        //強制
+        [HarmonyPostfix,HarmonyPatch(typeof(UIStorageGrid), "HandPut")]
+        public static void UIStorageGrid_HandPut_Postfix(UIStorageGrid __instance)
+        {
+            //LogManager.Logger.LogInfo("+++++++++++++++++++++++++++++++++[" + __instance.transform.parent.gameObject.name+"]");
+            if (enableSortInInventry.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Windows")
+            {
+                __instance.OnSort();
+            }
+            else if (enableSortInFuelChamber.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "fuel-group")
+            {
+                __instance.OnSort();
+            }
+            else if (enableSortInStorage.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Storage Window")
+            {
+                __instance.OnSort();
+            }
+            else if (enableSortInMiner.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Miner Window")
+            {
+                __instance.OnSort();
+            }
+            else if (enableSortInAssembler.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Assembler Window")
+            {
+                __instance.OnSort();
+            }
+        }
+        // fuel-storage
+        // Player Inventory
+        // storage
+        // 
+
+        //強制
+        [HarmonyPostfix,HarmonyPatch(typeof(UIStorageGrid), "HandTake")]
+        public static void UIStorageGrid_HandTake_Postfix(UIStorageGrid __instance)
+        {
+            if (enableSortInInventry.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Windows")
+            {
+                __instance.OnSort();
+            }
+            else if (enableSortInFuelChamber.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "fuel-group")
+            {
+                __instance.OnSort();
+            }
+            else if (enableSortInStorage.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Storage Window")
+            {
+                __instance.OnSort();
+            }
+            else if (enableSortInMiner.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Miner Window")
+            {
+                __instance.OnSort();
+            }
+            else if (enableSortInAssembler.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Assembler Window")
+            {
+                __instance.OnSort();
+            }
+        }
+
 
         //インベントリ
-        [HarmonyPatch(typeof(UIGame), "OpenPlayerInventory")]
-        public static class UIGame_OpenPlayerInventory_Postfix
-        {
-            [HarmonyPostfix]
+        [HarmonyPostfix,HarmonyPatch(typeof(UIGame), "OpenPlayerInventory")]
 
-            public static void Postfix(UIGame __instance)
+            public static void UIGame_OpenPlayerInventory_Postfix(UIGame __instance)
             {
 
-                if (enableSortInInventry.Value)
+                if (enableForcedSort.Value)
                 {
                     __instance.inventory.OnSort();
                 }
             }
-        }
 
         //インベントリ強制ソート
-        [HarmonyPatch(typeof(UIStorageGrid), "_OnUpdate")]
+        //[HarmonyPatch(typeof(UIStorageGrid), "_OnUpdate")]
         public static class UIStorageGrid__OnUpdate_Postfix
         {
             [HarmonyPostfix]
@@ -113,12 +179,8 @@ namespace DSPAutoSorter
 
 
         //メカ燃焼室
-        [HarmonyPatch(typeof(UIMechaWindow), "_OnOpen")]
-        public static class UIMechaWindow_OnOpen_Postfix
-        {
-            [HarmonyPostfix]
-
-            public static void Postfix(UIMechaWindow __instance)
+        [HarmonyPostfix,HarmonyPatch(typeof(UIMechaWindow), "_OnOpen")]
+            public static void UIMechaWindow_OnOpen_Postfix(UIMechaWindow __instance)
             {
 
 
@@ -127,11 +189,10 @@ namespace DSPAutoSorter
                     GameMain.mainPlayer.mecha.reactorStorage.Sort(true);
                 }
 
-            }
         }
 
         //メカ燃焼室強制
-        [HarmonyPatch(typeof(UIMechaWindow), "_OnUpdate")]
+        //[HarmonyPatch(typeof(UIMechaWindow), "_OnUpdate")]
         public static class UIMechaWindow_OnUpdate_Postfix
         {
             [HarmonyPostfix]
@@ -183,22 +244,17 @@ namespace DSPAutoSorter
 
 
         //ストレージ
-        [HarmonyPatch(typeof(UIStorageWindow), "_OnOpen")]
-        public static class UIStorageWindow_OnOpen_Postfix
-        {
-            [HarmonyPostfix]
-
-            public static void Postfix(UIStorageWindow __instance)
+        [HarmonyPostfix,HarmonyPatch(typeof(UIStorageWindow), "_OnOpen")]
+            public static void UIStorageWindow_OnOpen_Postfix(UIStorageWindow __instance)
             {
                 if (enableSortInStorage.Value)
                 {
                     __instance.OnSortClick();
                 }
             }
-        }
 
         //ストレージ強制
-        [HarmonyPatch(typeof(UIStorageWindow), "_OnUpdate")]
+        //[HarmonyPatch(typeof(UIStorageWindow), "_OnUpdate")]
         public static class UIStorageWindow_OnUpdate_Postfix
         {
             [HarmonyPostfix]
@@ -215,12 +271,8 @@ namespace DSPAutoSorter
 
 
         //採掘機のインベントリ
-        [HarmonyPatch(typeof(UIMinerWindow), "_OnOpen")]
-        public static class UIMinerWindow_OnOpen_Postfix
-        {
-            [HarmonyPostfix]
-
-            public static void Postfix(UIMinerWindow __instance)
+        [HarmonyPostfix,HarmonyPatch(typeof(UIMinerWindow), "_OnOpen")]
+            public static void UIMinerWindow_OnOpen_Postfix(UIMinerWindow __instance)
             {
                 if (enableSortInMiner.Value)
                 {
@@ -232,10 +284,9 @@ namespace DSPAutoSorter
                     }
                 }
             }
-        }
 
         //採掘機のインベントリ強制
-        [HarmonyPatch(typeof(UIMinerWindow), "_OnUpdate")]
+        //[HarmonyPatch(typeof(UIMinerWindow), "_OnUpdate")]
         public static class UIMinerWindow__OnUpdate_Postfix
         {
             [HarmonyPostfix]
@@ -256,12 +307,8 @@ namespace DSPAutoSorter
 
 
         //組立機のインベントリ
-        [HarmonyPatch(typeof(UIAssemblerWindow), "_OnOpen")]
-        public static class UIAssemblerWindow_OnOpen_Postfix
-        {
-            [HarmonyPostfix]
-
-            public static void Postfix(UIAssemblerWindow __instance)
+        [HarmonyPostfix,HarmonyPatch(typeof(UIAssemblerWindow), "_OnOpen")]
+            public static void UIAssemblerWindow_OnOpen_Postfix(UIAssemblerWindow __instance)
             {
                 if (enableSortInAssembler.Value)
                 {
@@ -274,10 +321,9 @@ namespace DSPAutoSorter
 
                  }
             }
-        }
 
         //組立機のインベントリ強制
-        [HarmonyPatch(typeof(UIAssemblerWindow), "_OnUpdate")]
+        //[HarmonyPatch(typeof(UIAssemblerWindow), "_OnUpdate")]
         public static class UIAssemblerWindow_OnUpdate_Postfix
         {
             [HarmonyPostfix]

@@ -27,6 +27,8 @@ If you have any problems or suggestions, please contact DISCORD MSP Modding serv
 不具合、改善案などありましたら、DISCORD「DysonSphereProgram_Jp」サーバー**Appun#8284**までお願いします。<br>
 <br>
 ## Change Log　更新履歴
+### v1.2.5
+- Fixed a problem that forced sort increase the load with a assembler.　組立機の強制ソートモードで負荷が増加する問題を修正しました。
 ### v1.2.4
 - no changes, but confirmed that it works properly with game version 0.9.24.11209. 変更はありませんが、ゲームバージョン0.9.24.11209で正常に動作することを確認しました。
 - published in GitHub. GitHubに公開しました。
