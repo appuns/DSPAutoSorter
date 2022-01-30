@@ -29,7 +29,7 @@ using System.Security.Permissions;
 
 namespace DSPAutoSorter
 {
-    [BepInPlugin("Appun.DSP.plugin.AutoSorter", "DSPAutoSorter", "1.2.5")]
+    [BepInPlugin("Appun.DSP.plugin.AutoSorter", "DSPAutoSorter", "1.2.6")]
     [HarmonyPatch]
     public class DSPAutoSorter : BaseUnityPlugin
     {
@@ -90,29 +90,47 @@ namespace DSPAutoSorter
         }
 
 
-
-        //強制
-        [HarmonyPostfix,HarmonyPatch(typeof(UIStorageGrid), "HandPut")]
-        public static void UIStorageGrid_HandPut_Postfix(UIStorageGrid __instance)
+        //[HarmonyPostfix]
+        //[HarmonyPatch(typeof(StorageComponent), "NotifyStorageChange")]
+        public static void StorageComponent_NotifyStorageChange_Postfix(StorageComponent __instance)
         {
-            //LogManager.Logger.LogInfo("+++++++++++++++++++++++++++++++++[" + __instance.transform.parent.gameObject.name+"]");
-            if (enableSortInInventry.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Windows")
+            LogManager.Logger.LogInfo("+++++++++++++++++++++++++++++++++StorageComponent　NotifyStorageChange");
+            //if (__instance.entityId > 0)
+            //{
+            //    LogManager.Logger.LogInfo("+++++++++++++++++++++++++++++++++StorageComponent　NotifyStorageChange　" + GameMain.data.localPlanet.factory.entityPool[__instance.entityId].assemblerId);
+            //    __instance.Sort();
+            //}
+        }
+
+
+
+        //強制１
+        [HarmonyPrefix,HarmonyPatch(typeof(UIStorageGrid), "OnStorageContentChanged")]
+        //[HarmonyPatch(typeof(UIStorageGrid), "HandPut")]
+        public static void UIStorageGrid_OnStorageContentChanged_Prefix(UIStorageGrid __instance)
+        {
+            if (__instance.storage == null || !enableForcedSort.Value)
+            {
+                return;
+            }
+            var parentObj = __instance.transform.parent.gameObject;
+            if (enableSortInInventry.Value && parentObj.name == "Windows")
             {
                 __instance.OnSort();
             }
-            else if (enableSortInFuelChamber.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "fuel-group")
+            else if (enableSortInFuelChamber.Value && parentObj.name == "fuel-group")
             {
                 __instance.OnSort();
             }
-            else if (enableSortInStorage.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Storage Window")
+            else if (enableSortInStorage.Value && parentObj.name == "Storage Window")
             {
                 __instance.OnSort();
             }
-            else if (enableSortInMiner.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Miner Window")
+            else if (enableSortInMiner.Value && parentObj.name == "Miner Window")
             {
                 __instance.OnSort();
             }
-            else if (enableSortInAssembler.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Assembler Window")
+            else if (enableSortInAssembler.Value && parentObj.name == "Assembler Window")
             {
                 __instance.OnSort();
             }
@@ -122,44 +140,46 @@ namespace DSPAutoSorter
         // storage
         // 
 
-        //強制
-        [HarmonyPostfix,HarmonyPatch(typeof(UIStorageGrid), "HandTake")]
-        public static void UIStorageGrid_HandTake_Postfix(UIStorageGrid __instance)
-        {
-            if (enableSortInInventry.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Windows")
-            {
-                __instance.OnSort();
-            }
-            else if (enableSortInFuelChamber.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "fuel-group")
-            {
-                __instance.OnSort();
-            }
-            else if (enableSortInStorage.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Storage Window")
-            {
-                __instance.OnSort();
-            }
-            else if (enableSortInMiner.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Miner Window")
-            {
-                __instance.OnSort();
-            }
-            else if (enableSortInAssembler.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Assembler Window")
-            {
-                __instance.OnSort();
-            }
-        }
+        //強制２
+        //[HarmonyPostfix,HarmonyPatch(typeof(UIStorageGrid), "HandTake")]
+        //public static void UIStorageGrid_HandTake_Postfix(UIStorageGrid __instance)
+        //{
+        //    if (enableSortInInventry.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Windows")
+        //    {
+        //        __instance.OnSort();
+        //    }
+        //    else if (enableSortInFuelChamber.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "fuel-group")
+        //    {
+        //        __instance.OnSort();
+        //    }
+        //    else if (enableSortInStorage.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Storage Window")
+        //    {
+        //        __instance.OnSort();
+        //    }
+        //    else if (enableSortInMiner.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Miner Window")
+        //    {
+        //        LogManager.Logger.LogInfo("+++++++++++++++++++++++++++++++++HandTake　　" + __instance.transform.parent.gameObject.name);
+        //        __instance.OnSort();
+        //    }
+        //    else if (enableSortInAssembler.Value && enableForcedSort.Value && __instance.transform.parent.gameObject.name == "Assembler Window")
+        //    {
+        //        LogManager.Logger.LogInfo("+++++++++++++++++++++++++++++++++HandTake　　" + __instance.transform.parent.gameObject.name);
+        //        __instance.OnSort();
+        //    }
+        //}
 
 
         //インベントリ
-        [HarmonyPostfix,HarmonyPatch(typeof(UIGame), "OpenPlayerInventory")]
+        [HarmonyPostfix, HarmonyPatch(typeof(UIGame), "OpenPlayerInventory")]
 
-            public static void UIGame_OpenPlayerInventory_Postfix(UIGame __instance)
+        public static void UIGame_OpenPlayerInventory_Postfix(UIGame __instance)
+        {
+
+            if (enableForcedSort.Value)
             {
-
-                if (enableForcedSort.Value)
-                {
-                    __instance.inventory.OnSort();
-                }
+                __instance.inventory.OnSort();
             }
+        }
 
         //インベントリ強制ソート
         //[HarmonyPatch(typeof(UIStorageGrid), "_OnUpdate")]
@@ -169,7 +189,7 @@ namespace DSPAutoSorter
 
             public static void Postfix(UIStorageGrid __instance)
             {
-                if (enableSortInInventry.Value && enableForcedSort.Value && __instance.name == "Player Inventory") 
+                if (enableSortInInventry.Value && enableForcedSort.Value && __instance.name == "Player Inventory")
                 {
                     __instance.OnSort();
                     //LogManager.Logger.LogInfo("+++++++++++++++++++++++++++++++++" + __instance.name);
@@ -179,15 +199,15 @@ namespace DSPAutoSorter
 
 
         //メカ燃焼室
-        [HarmonyPostfix,HarmonyPatch(typeof(UIMechaWindow), "_OnOpen")]
-            public static void UIMechaWindow_OnOpen_Postfix(UIMechaWindow __instance)
+        [HarmonyPostfix, HarmonyPatch(typeof(UIMechaWindow), "_OnOpen")]
+        public static void UIMechaWindow_OnOpen_Postfix(UIMechaWindow __instance)
+        {
+
+
+            if (enableSortInFuelChamber.Value)
             {
-
-
-                if (enableSortInFuelChamber.Value)
-                {
-                    GameMain.mainPlayer.mecha.reactorStorage.Sort(true);
-                }
+                GameMain.mainPlayer.mecha.reactorStorage.Sort(true);
+            }
 
         }
 
@@ -244,14 +264,14 @@ namespace DSPAutoSorter
 
 
         //ストレージ
-        [HarmonyPostfix,HarmonyPatch(typeof(UIStorageWindow), "_OnOpen")]
-            public static void UIStorageWindow_OnOpen_Postfix(UIStorageWindow __instance)
+        [HarmonyPostfix, HarmonyPatch(typeof(UIStorageWindow), "_OnOpen")]
+        public static void UIStorageWindow_OnOpen_Postfix(UIStorageWindow __instance)
+        {
+            if (enableSortInStorage.Value)
             {
-                if (enableSortInStorage.Value)
-                {
-                    __instance.OnSortClick();
-                }
+                __instance.OnSortClick();
             }
+        }
 
         //ストレージ強制
         //[HarmonyPatch(typeof(UIStorageWindow), "_OnUpdate")]
@@ -271,19 +291,19 @@ namespace DSPAutoSorter
 
 
         //採掘機のインベントリ
-        [HarmonyPostfix,HarmonyPatch(typeof(UIMinerWindow), "_OnOpen")]
-            public static void UIMinerWindow_OnOpen_Postfix(UIMinerWindow __instance)
+        [HarmonyPostfix, HarmonyPatch(typeof(UIMinerWindow), "_OnOpen")]
+        public static void UIMinerWindow_OnOpen_Postfix(UIMinerWindow __instance)
+        {
+            if (enableSortInMiner.Value)
             {
-                if (enableSortInMiner.Value)
+                //ref UIStorageGrid playerInventory = ref AccessTools.FieldRefAccess<UIMinerWindow, UIStorageGrid>(UIRoot.instance.uiGame.minerWindow, "playerInventory");
+                if (__instance.playerInventory.active)
                 {
-                    //ref UIStorageGrid playerInventory = ref AccessTools.FieldRefAccess<UIMinerWindow, UIStorageGrid>(UIRoot.instance.uiGame.minerWindow, "playerInventory");
-                    if (__instance.playerInventory.active)
-                    {
-                        ref StorageComponent Storage = ref AccessTools.FieldRefAccess<UIStorageGrid, StorageComponent>(__instance.playerInventory, "storage");
-                        Storage.Sort();
-                    }
+                    ref StorageComponent Storage = ref AccessTools.FieldRefAccess<UIStorageGrid, StorageComponent>(__instance.playerInventory, "storage");
+                    Storage.Sort();
                 }
             }
+        }
 
         //採掘機のインベントリ強制
         //[HarmonyPatch(typeof(UIMinerWindow), "_OnUpdate")]
@@ -307,20 +327,20 @@ namespace DSPAutoSorter
 
 
         //組立機のインベントリ
-        [HarmonyPostfix,HarmonyPatch(typeof(UIAssemblerWindow), "_OnOpen")]
-            public static void UIAssemblerWindow_OnOpen_Postfix(UIAssemblerWindow __instance)
+        [HarmonyPostfix, HarmonyPatch(typeof(UIAssemblerWindow), "_OnOpen")]
+        public static void UIAssemblerWindow_OnOpen_Postfix(UIAssemblerWindow __instance)
+        {
+            if (enableSortInAssembler.Value)
             {
-                if (enableSortInAssembler.Value)
+                //ref UIStorageGrid playerInventory = ref AccessTools.FieldRefAccess<UIAssemblerWindow, UIStorageGrid>(UIRoot.instance.uiGame.assemblerWindow, "playerInventory");
+                if (__instance.playerInventory.active)
                 {
-                    //ref UIStorageGrid playerInventory = ref AccessTools.FieldRefAccess<UIAssemblerWindow, UIStorageGrid>(UIRoot.instance.uiGame.assemblerWindow, "playerInventory");
-                    if (__instance.playerInventory.active)
-                    {
-                        ref StorageComponent Storage = ref AccessTools.FieldRefAccess<UIStorageGrid, StorageComponent>(__instance.playerInventory, "storage");
-                        Storage.Sort();
-                    }
+                    ref StorageComponent Storage = ref AccessTools.FieldRefAccess<UIStorageGrid, StorageComponent>(__instance.playerInventory, "storage");
+                    Storage.Sort();
+                }
 
-                 }
             }
+        }
 
         //組立機のインベントリ強制
         //[HarmonyPatch(typeof(UIAssemblerWindow), "_OnUpdate")]

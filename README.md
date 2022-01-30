@@ -27,6 +27,8 @@ If you have any problems or suggestions, please contact DISCORD MSP Modding serv
 不具合、改善案などありましたら、DISCORD「DysonSphereProgram_Jp」サーバー**Appun#8284**までお願いします。<br>
 <br>
 ## Change Log　更新履歴
+### v1.2.6
+- Fixed a problem when picking up items　アイテムを取るときの問題を解消しました。
 ### v1.2.5
 - Fixed a problem that forced sort increase the load with a assembler.　組立機の強制ソートモードで負荷が増加する問題を修正しました。
 ### v1.2.4
