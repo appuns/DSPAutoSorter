@@ -114,7 +114,7 @@ namespace DSPAutoSorter
                 return;
             }
             var parentObj = __instance.transform.parent.gameObject;
-            if (enableSortInInventry.Value && parentObj.name == "Windows")
+            if (enableSortInInventry.Value && parentObj.name == "Player Inventory")
             {
                 __instance.OnSort();
             }
@@ -170,9 +170,9 @@ namespace DSPAutoSorter
 
 
         //インベントリ
-        [HarmonyPostfix, HarmonyPatch(typeof(UIGame), "OpenPlayerInventory")]
+        [HarmonyPostfix, HarmonyPatch(typeof(UIInventoryWindow), "_OnOpen")]
 
-        public static void UIGame_OpenPlayerInventory_Postfix(UIGame __instance)
+        public static void UIGame_OpenPlayerInventory_Postfix(UIInventoryWindow __instance)
         {
 
             if (enableForcedSort.Value)
