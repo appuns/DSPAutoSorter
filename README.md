@@ -27,6 +27,9 @@ If you have any problems or suggestions, please contact DISCORD MSP Modding serv
 不具合、改善案などありましたら、DISCORD「DysonSphereProgram_Jp」サーバー**Appun#8284**までお願いします。<br>
 <br>
 ## Change Log　更新履歴
+### v1.2.9
+- Supported the game Version 0.10.28.21172. ゲームバージョン0.10.28.21172に対応しています。
+- Added forced sorting of battlefield Analysis Base. 戦場分析基地の強制ソートを追加しました。
 ### v1.2.8
 - Supported the game Version 0.10.28.20856. ゲームバージョン0.10.28.20856に対応しています。
 ### v1.2.7
